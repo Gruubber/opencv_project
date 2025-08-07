@@ -1,8 +1,25 @@
 import time
 import board
 from adafruit_motorkit import MotorKit
+import socket
+import json
+
+UDP_IP = "127.0.0.1"
+UDP_PORT = 5005
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.bind((UDP_IP, UDP_PORT))
 
 kit = MotorKit(i2c=board.I2C())
+
+def print_info():
+    data_bytes, addr = sock.recvfrom(1024)
+    data = json.loads(data_bytes.decode())
+    x = data.get("x")
+    y = data.get("y")
+    radius = data.get("radius")
+
+    print(f"Ball at ({x},{y}), Radius: {radius}")
 
 def left_speed(speed):#set the speed of the motors on the left side
     kit.motor1.throttle = speed
@@ -36,6 +53,10 @@ def stop():
     left_speed(0)
     right_speed(0)
 
-forward(0.4)
-time.sleep(0.5)
-stop()
+#forward(0.5)
+#backward(0.5)
+#steer(0.3,1)
+#time.sleep(0.5)
+while True:
+    print_info()
+#stop()
