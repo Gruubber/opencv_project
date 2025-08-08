@@ -12,14 +12,34 @@ sock.bind((UDP_IP, UDP_PORT))
 
 kit = MotorKit(i2c=board.I2C())
 
-def print_info():
-    data_bytes, addr = sock.recvfrom(1024)
-    data = json.loads(data_bytes.decode())
-    x = data.get("x")
-    y = data.get("y")
-    radius = data.get("radius")
+def algorithm():
+    tolerence = 5
+    x = y = radius = None
+    des_distance =  25 #set a minimum distance between the ball and the car(car will move forward and backward to keep this distance)
+    #set the desired coordinates so that the ball always stays at the origin
+    des_coordX = 0 
+    des_coordY = 0
+    while True:
+        data_bytes, addr = sock.recvfrom(1024)
+        data = json.loads(data_bytes.decode())
+        #x_prev = x
+        #y_prev = y
+        #radius_prev = radius
+        x = data.get("x")
+        y = data.get("y")
+        radius = data.get("radius")
 
-    print(f"Ball at ({x},{y}), Radius: {radius}")
+        #print(f"Ball at ({x},{y}), Radius: {radius}")
+        if(radius is None or abs(radius-des_distance) <= tolerence):
+            #if the ball is not detected or the ball is at the desired distance, stop the car
+            stop()
+        elif(radius > des_distance):
+            #if new radius is bigger than the previous radius, the ball is closer so move back
+            backward(0.35)
+            
+        elif(radius < des_distance):
+            forward(0.35)
+
 
 def left_speed(speed):#set the speed of the motors on the left side
     kit.motor1.throttle = speed
@@ -57,6 +77,5 @@ def stop():
 #backward(0.5)
 #steer(0.3,1)
 #time.sleep(0.5)
-while True:
-    print_info()
+algorithm()
 #stop()

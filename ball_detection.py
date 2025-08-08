@@ -59,7 +59,7 @@ while True:
     mask = cv2.dilate(mask, None, iterations=2)
 
     # ADD THIS LINE to see the mask
-    cv2.imshow("Mask", mask)
+    #cv2.imshow("Mask", mask)
     (h,w) = frame.shape[:2]
     # Find contours in the mask
     contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
