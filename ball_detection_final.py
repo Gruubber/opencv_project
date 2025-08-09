@@ -21,7 +21,7 @@ picam2.configure(camera_config)
 picam2.start()
 
 # Allow camera to warm up
-time.sleep(0.2)
+time.sleep(0.1)
 
 # ==============================
 # HSV Range for LIGHT GREEN ball
@@ -54,7 +54,7 @@ while True:
     # Noise reduction: erode → dilate (open), then median blur
     mask = cv2.erode(mask, None, iterations=2)
     mask = cv2.dilate(mask, None, iterations=2)
-    mask = cv2.medianBlur(mask, 5)
+    # mask = cv2.medianBlur(mask, 5)
 
     # Find contours
     contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -76,22 +76,22 @@ while True:
             info_text = f"Ball: ({new_x}, {new_y}), r={int(radius)}"
 
             # Draw ball and center
-            cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
-            cv2.circle(frame, (int(x), int(y)), 3, (0, 0, 255), -1)
+            #cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 1)
+            #cv2.circle(frame, (int(x), int(y)), 2, (0, 0, 255), -1)
 
     # Send via UDP
     sock.sendto(json.dumps(ball_data).encode(), (UDP_IP, UDP_PORT))
 
     # Draw crosshair
-    cv2.line(frame, (w // 2, 0), (w // 2, h), (0, 255, 0), 1)
-    cv2.line(frame, (0, h // 2), (w, h // 2), (0, 255, 0), 1)
+    #cv2.line(frame, (w // 2, 0), (w // 2, h), (0, 255, 0), 1)
+    #cv2.line(frame, (0, h // 2), (w, h // 2), (0, 255, 0), 1)
 
     # Show info text
-    cv2.putText(frame, info_text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    #cv2.putText(frame, info_text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     # Show camera feed and mask side-by-side
-    mask_bgr = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-    cv2.imshow("Ball Detection", frame)
+    #mask_bgr = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+    #cv2.imshow("Ball Detection", frame)
 
     # Quit on 'q'
     if cv2.waitKey(1) & 0xFF == ord('q'):
