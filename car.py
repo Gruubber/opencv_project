@@ -17,10 +17,9 @@ last_direction = 0.0
 last_time = time.time()
 
 kit = MotorKit(i2c=board.I2C())
-
+'''
 def map_val(inp,in_min,in_max,out_min,out_max):
     return (((inp - in_min)/(in_max - in_min))*(out_max - out_min)) + out_min
-'''
 def algorithm():
     tolerence = 5
     x = y = radius = None
@@ -75,8 +74,6 @@ def algorithm():
         elif(radius < des_distance):
             forward(0.35)
             #time.sleep(0.2)
-            '''
-
 '''
 
 
@@ -154,9 +151,9 @@ def stop():
     left_speed(0)
     right_speed(0)
 
-#forward(0.5)
+forward(0.5)
 #backward(0.5)
 #steer(0.3,1)
-#time.sleep(0.5)
-algorithm()
-#stop()
+time.sleep(0.5)
+#algorithm()
+stop()

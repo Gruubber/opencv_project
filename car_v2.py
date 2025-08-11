@@ -10,10 +10,12 @@ UDP_PORT = 5005
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((UDP_IP, UDP_PORT))
 
-kp = 0.002
+#gains for direction control
+kp = 0.003
 kd = 0.0
 
-kp_t = 0.03
+#gains for throttle control
+kp_t = 0.05
 kd_t = 0.0
 
 last_direction_error = 0.0
@@ -50,9 +52,6 @@ def algorithm():
 
         curr_time = time.time()
         change_time = curr_time - last_time
-        #prevent division by zero with change time
-        if change_time == 0:
-            change_time = 1e-6
         radius_error = des_distance - radius
         direction_error = x #since the desired x is at the origin 0 we will just write x
 
@@ -62,16 +61,20 @@ def algorithm():
             #now calculate throttle and direction so that car is always at the right distance and centre to the ball
             #set throttle accroding to the distance from the ball, if ball is furthur away the throttle will be high and 
             #as it approaches the ball it will slow down, so it should be a factor of radius_error
-            change_radius_error = (radius_error - last_radius_error)/change_time
-            change_direction = (direction_error - last_direction_error)/change_time
 
+            if change_time > 0: #prevent division by zero with change time
+                change_radius_error = (radius_error - last_radius_error)/change_time
+                change_direction_error = (direction_error - last_direction_error)/change_time
+            else:
+                change_radius_error = 0
+                change_direction_error = 0
             #PD controller for throttle
             throttle = (radius_error * kp_t) + (change_radius_error * kd_t) 
             #clamp throttle between -base_speed to base_speed, for proper backward and forward operation
             throttle = max(-base_speed,min(base_speed,throttle))
 
             #PD controller for the direction 
-            new_direction = (kp * direction_error) + (kd * change_direction)
+            new_direction = (kp * direction_error) + (kd * change_direction_error)
 
             steer(throttle,new_direction) 
 
