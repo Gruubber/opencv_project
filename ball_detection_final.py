@@ -54,7 +54,7 @@ while True:
     # Noise reduction: erode → dilate (open), then median blur
     mask = cv2.erode(mask, None, iterations=2)
     mask = cv2.dilate(mask, None, iterations=2)
-    # mask = cv2.medianBlur(mask, 5)
+    mask = cv2.medianBlur(mask, 5)
 
     # Find contours
     contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)

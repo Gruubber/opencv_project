@@ -4,42 +4,57 @@ from adafruit_motorkit import MotorKit
 import socket
 import json
 
+#constants
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind((UDP_IP, UDP_PORT))
+tolerence_x = 7
+tolerence_r = 5
+des_distance =  25 #set a minimum distance between the ball and the car(car will move forward and backward to keep this distance)
+base_speed = 0.35
 
 #gains for direction control
-kp = 0.003
-kd = 0.0
+kp = 0.0025
+kd = 0.0002
 
 #gains for throttle control
-kp_t = 0.05
+kp_t = 0.9
 kd_t = 0.0
 
+#gains for EMA
+alpha_m = 0.5 #input gain for EMA(exponential moving average) 
+alpha_d = 1 #derivative gain for EMA
+
+#---state variables----
+smoothed_x = 0.0
+smoothed_radius = 0.0
+smoothed_der_radius = 0.0
+smoothed_der_direction = 0.0
+is_first_run = True
 last_direction_error = 0.0
 last_radius_error = 0.0
 last_time = time.time()
 
+#hardware setup
 kit = MotorKit(i2c=board.I2C())
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.bind((UDP_IP, UDP_PORT))
 
 def map_val(inp,in_min,in_max,out_min,out_max):
     return (((inp - in_min)/(in_max - in_min))*(out_max - out_min)) + out_min
 
 def algorithm():
-    tolerence = 5
-    x = y = radius = None
-    des_distance =  25 #set a minimum distance between the ball and the car(car will move forward and backward to keep this distance)
-    base_speed = 0.3
+    global last_time, last_direction_error, last_radius_error
+    global smoothed_x, smoothed_radius, is_first_run
+    global smoothed_der_radius, smoothed_der_direction
+
     while True:
         data_bytes, addr = sock.recvfrom(1024)
         data = json.loads(data_bytes.decode())
-        global last_time, last_direction_error, last_radius_error
         x = data.get("x")
         y = data.get("y")
         radius = data.get("radius")
         throttle = 0
+        
 
         if x is None or radius is None:
             #stop the car if ball is not detected or the car is within the desired distance from the ball and at the centre
@@ -48,39 +63,61 @@ def algorithm():
             last_direction_error = 0
             last_radius_error = 0
             last_time = time.time()
+            is_first_run = True #reset is_first_run
             continue
+
+        if is_first_run: #first measurement input or ball returned to the frame
+            #initialize smoothed data with the raw data
+            smoothed_x = x
+            smoothed_radius = radius
+            #smoothed_der_radius = 0.0
+            #smoothed_der_direction = 0.0
+            is_first_run = False
+        else:
+            #now smooth out raw input using current value and the previously smoothed value
+            #alpha is a constant here so both x and smoothed_x do the same contribution into finding the next smoothed_x    
+            smoothed_x = alpha_m * x + (1-alpha_m) * smoothed_x
+            smoothed_radius = alpha_m * radius + (1-alpha_m) * smoothed_radius
 
         curr_time = time.time()
         change_time = curr_time - last_time
-        radius_error = des_distance - radius
-        direction_error = x #since the desired x is at the origin 0 we will just write x
+        radius_error = des_distance - smoothed_radius
+        direction_error = smoothed_x #since the desired x is at the origin 0 we will just write smoothed_x
 
-        if abs(radius_error) < tolerence and abs(x) < tolerence:
+        if abs(radius_error) < tolerence_r and abs(direction_error) < tolerence_x:
             stop()
         else:
             #now calculate throttle and direction so that car is always at the right distance and centre to the ball
-            #set throttle accroding to the distance from the ball, if ball is furthur away the throttle will be high and 
+            #set throttle accroding to the distance from the ball, if ball is furthur away the throttle will be high and
             #as it approaches the ball it will slow down, so it should be a factor of radius_error
 
             if change_time > 0: #prevent division by zero with change time
                 change_radius_error = (radius_error - last_radius_error)/change_time
                 change_direction_error = (direction_error - last_direction_error)/change_time
+                #smooth out the derivative of radius error EMA
+                smoothed_der_radius = alpha_d * change_radius_error + (1-alpha_d) * smoothed_der_radius
+                #smooth out the derivative of direction error using EMA
+                smoothed_der_direction = alpha_d * change_direction_error + (1-alpha_d) * smoothed_der_direction
             else:
                 change_radius_error = 0
                 change_direction_error = 0
+
             #PD controller for throttle
-            throttle = (radius_error * kp_t) + (change_radius_error * kd_t) 
+            throttle = (radius_error * kp_t) + (smoothed_der_radius * kd_t)
             #clamp throttle between -base_speed to base_speed, for proper backward and forward operation
             throttle = max(-base_speed,min(base_speed,throttle))
 
-            #PD controller for the direction 
-            new_direction = (kp * direction_error) + (kd * change_direction_error)
+            #PD controller for the direction
+            new_direction = (kp * direction_error) + (kd * smoothed_der_direction)
 
-            steer(throttle,new_direction) 
+            steer(throttle,new_direction)
 
+        #print(change_time)
+        #time.sleep(0.02)#add small delay for consitent change in time
         last_time = curr_time
         last_direction_error = direction_error
         last_radius_error = radius_error
+
 
 def left_speed(speed):#set the speed of the motors on the left side
     kit.motor1.throttle = speed
@@ -103,8 +140,15 @@ def steer(speed,direction):
     right_speed(right_side)
 
 def stop():
-    left_speed(0)
-    right_speed(0)
+    left_speed(0.0)
+    right_speed(0.0)
 
-algorithm()
+try:
+    algorithm()
+
+except Exception as e:
+    print("Error Occurred:",e)
+
+finally:
+    stop()
 
