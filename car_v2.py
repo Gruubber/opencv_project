@@ -17,12 +17,12 @@ kp = 0.0025
 kd = 0.0002
 
 #gains for throttle control
-kp_t = 0.9
-kd_t = 0.0
+kp_t = 0.09
+kd_t = 0.036
 
 #gains for EMA
-alpha_m = 0.5 #input gain for EMA(exponential moving average) 
-alpha_d = 1 #derivative gain for EMA
+alpha_m = 0.4 #input gain for EMA(exponential moving average) 
+alpha_d = 0.65 #derivative gain for EMA
 
 #---state variables----
 smoothed_x = 0.0
