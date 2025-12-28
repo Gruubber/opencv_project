@@ -79,7 +79,7 @@ while True:
         new_x = int(x - w/2)
         new_y = int(h/2 - y)
 
-        if radius > 10:
+        if radius > 5:
             ball_data = {"x": new_x, "y": new_y, "radius": int(radius)}
             info_text = f"Ball: ({new_x}, {new_y}), r={int(radius)}"
             cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)

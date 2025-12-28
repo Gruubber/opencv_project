@@ -27,9 +27,12 @@ time.sleep(0.1)
 # HSV Range for LIGHT GREEN ball
 # (Tune these if needed)
 # ==============================
+#hsv values for dark green
+green_lower = np.array([63,76,107],np.uint8)
+green_upper = np.array([78,255,255],np.uint8)
 # Light green tends to be around H: 35-85, S: medium-high, V: high
-green_lower = np.array([35, 100, 60], np.uint8)
-green_upper = np.array([55, 255, 255], np.uint8)
+#green_lower = np.array([35, 100, 60], np.uint8)
+#green_upper = np.array([55, 255, 255], np.uint8)
 
 # ==============================
 # Main loop
@@ -71,13 +74,13 @@ while True:
         new_x = int(x - (w / 2))      # X relative to center
         new_y = int((h / 2) - y)      # Y relative to center (inverted)
 
-        if radius > 10:  # Ignore very small blobs
+        if radius > 5:  # Ignore very small blobs
             ball_data = {"x": new_x, "y": new_y, "radius": int(radius)}
             info_text = f"Ball: ({new_x}, {new_y}), r={int(radius)}"
 
             # Draw ball and center
-            #cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 1)
-            #cv2.circle(frame, (int(x), int(y)), 2, (0, 0, 255), -1)
+           # cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 1)
+           # cv2.circle(frame, (int(x), int(y)), 2, (0, 0, 255), -1)
 
     # Send via UDP
     sock.sendto(json.dumps(ball_data).encode(), (UDP_IP, UDP_PORT))
@@ -87,7 +90,7 @@ while True:
     #cv2.line(frame, (0, h // 2), (w, h // 2), (0, 255, 0), 1)
 
     # Show info text
-    #cv2.putText(frame, info_text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+   # cv2.putText(frame, info_text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     # Show camera feed and mask side-by-side
     #mask_bgr = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)

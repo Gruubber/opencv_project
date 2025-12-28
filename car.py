@@ -151,9 +151,9 @@ def stop():
     left_speed(0)
     right_speed(0)
 
-forward(0.5)
+#forward(0.5)
 #backward(0.5)
 #steer(0.3,1)
-time.sleep(0.5)
-#algorithm()
-stop()
+#time.sleep(0.5)
+algorithm()
+#stop()

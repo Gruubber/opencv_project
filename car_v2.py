@@ -10,18 +10,18 @@ UDP_PORT = 5005
 tolerence_x = 7
 tolerence_r = 5
 des_distance =  25 #set a minimum distance between the ball and the car(car will move forward and backward to keep this distance)
-base_speed = 0.35
+base_speed = 0.4
 
 #gains for direction control
 kp = 0.0025
 kd = 0.0002
 
 #gains for throttle control
-kp_t = 0.09
-kd_t = 0.036
+kp_t = 0.07
+kd_t = 0.033
 
 #gains for EMA
-alpha_m = 0.4 #input gain for EMA(exponential moving average) 
+alpha_m = 0.4#input gain for EMA(exponential moving average) 
 alpha_d = 0.65 #derivative gain for EMA
 
 #---state variables----
@@ -70,8 +70,9 @@ def algorithm():
             #initialize smoothed data with the raw data
             smoothed_x = x
             smoothed_radius = radius
-            #smoothed_der_radius = 0.0
-            #smoothed_der_direction = 0.0
+            #initialize smoothed derivatives to zero for the first run
+            smoothed_der_radius = 0.0
+            smoothed_der_direction = 0.0
             is_first_run = False
         else:
             #now smooth out raw input using current value and the previously smoothed value
@@ -121,11 +122,11 @@ def algorithm():
 
 def left_speed(speed):#set the speed of the motors on the left side
     kit.motor1.throttle = speed
-    kit.motor4.throttle = speed
+    kit.motor2.throttle = speed
 
 def right_speed(speed):#set the speed of the motors on the right side
-    kit.motor2.throttle = speed
     kit.motor3.throttle = speed
+    kit.motor4.throttle = speed
 
 def steer(speed,direction):
     
